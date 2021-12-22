@@ -6,87 +6,90 @@ from sprite_objects import SpriteObject
 
 class Player:
     def __init__(self, sprites):
-        self.x, self.y = player_pos
+        self.pos_x, self.pos_y = player_pos
         self.sprites = sprites
-        self.angle = player_angle
+        self.player_view_angle = player_view_angle
         # Параметры коллизий
-        self.side = 50
-        self.rect = pygame.Rect(*player_pos, self.side, self.side)
+        self.collision_side = 50
+        self.collision_rectangle = pygame.Rect(self.pos_x, self.pos_y, self.collision_side, self.collision_side)
         # Оружие
-        self.shot = False
+        self.shoot = False
 
     @property
-    def pos(self):
-        return (self.x, self.y)
+    def position(self):
+        return (self.pos_x, self.pos_y)
 
     @property
     def collision_list(self):
-        return map_generator.collision_walls + [pygame.Rect(*obj.pos, obj.side, obj.side) for obj in
-                                  self.sprites.list_of_objects if obj.blocked]
+        return map_generator.collision_walls + [pygame.Rect(*obj.pos, obj.collision_side, obj.collision_side) for obj in
+                                  self.sprites.list_of_objects if obj.walkable]
 
         # Обнаружение коллизий
-    def detect_collision(self, dx, dy):
-        next_rect = self.rect.copy()
-        next_rect.move_ip(dx, dy)
-        hit_indexes = next_rect.collidelistall(self.collision_list)
-        if len(hit_indexes):
+    def collision_detect(self, step_x, step_y):
+        # step_x, step_y - перемещение игрока на один "шаг" по соответствующим осям
+        future_rect = self.collision_rectangle.copy()
+        # Положение персонажа, после совершения "шага"
+        future_rect.move_ip(step_x, step_y)
+        # индекс стены, с которой столкнётся игрок, если совершит "шаг"
+        coll_indexes = future_rect.collidelistall(self.collision_list)
+        if len(coll_indexes):
             delta_x, delta_y = 0, 0
-            for hit_index in hit_indexes:
-                hit_rect = self.collision_list[hit_index]
-                if dx > 0:
-                    delta_x += next_rect.right - hit_rect.left
+            for coll_index in coll_indexes:
+                coll_rect = self.collision_list[coll_index]
+                if step_x > 0:
+                    delta_x += future_rect.right - coll_rect.left
                 else:
-                    delta_x += hit_rect.right - next_rect.left
-                if dy > 0:
-                    delta_y += next_rect.bottom - hit_rect.top
+                    delta_x += coll_rect.right - future_rect.left
+                if step_y > 0:
+                    delta_y += future_rect.bottom - coll_rect.top
                 else:
-                    delta_y += hit_rect.bottom - next_rect.top
-
+                    delta_y += coll_rect.bottom - future_rect.top
+            # игрок упёрся в угол
             if abs(delta_x - delta_y) < 10:
-                dx, dy = 0, 0
+                step_x, step_y = 0, 0
+            # игрок столкнулся с вертикальной стеной
             elif delta_x > delta_y:
-                dy = 0
+                step_y = 0
+            #игрок столкнулся с горизонтальной стеной
             elif delta_y > delta_x:
-                dx = 0
-        self.x += dx
-        self.y += dy
+                step_x = 0
+        self.pos_x += step_x
+        self.pos_y += step_y
 
         # Перемещение персонажа
     def movement(self):
-        sin_a = math.sin(self.angle)
-        cos_a = math.cos(self.angle)
-        keys = pygame.key.get_pressed()
+        sin_a = math.sin(self.player_view_angle)
+        cos_a = math.cos(self.player_view_angle)
 
-        if keys[pygame.K_LSHIFT]:
-            player_speed = 5
+        if pygame.key.get_pressed()[pygame.K_LSHIFT]:
+            speed = 5
         else:
-            player_speed = 3
-        if keys[pygame.K_w]:
-            dx = player_speed * cos_a
-            dy = player_speed * sin_a
-            self.detect_collision(dx, dy)
-            lvl = 2
-        if keys[pygame.K_s]:
-            dx = -player_speed * cos_a
-            dy = -player_speed * sin_a
-            self.detect_collision(dx, dy)
-        if keys[pygame.K_a]:
-            dx = player_speed / 1.5 * sin_a
-            dy = -player_speed / 1.5 * cos_a
-            self.detect_collision(dx, dy)
-        if keys[pygame.K_d]:
-            dx = -player_speed / 1.5 * sin_a
-            dy = player_speed / 1.5 * cos_a
-            self.detect_collision(dx, dy)
+            speed = 3
+        if pygame.key.get_pressed()[pygame.K_w]:
+            step_x = speed * cos_a
+            step_y = speed * sin_a
+            self.collision_detect(step_x, step_y)
+        if pygame.key.get_pressed()[pygame.K_s]:
+            step_x = -speed * cos_a
+            step_y = -speed * sin_a
+            self.collision_detect(step_x, step_y)
+        if pygame.key.get_pressed()[pygame.K_a]:
+            step_x = speed / 1.5 * sin_a
+            step_y = -speed / 1.5 * cos_a
+            self.collision_detect(step_x, step_y)
+        if pygame.key.get_pressed()[pygame.K_d]:
+            step_x = -speed / 1.5 * sin_a
+            step_y = speed / 1.5 * cos_a
+            self.collision_detect(step_x, step_y)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 GameRunning = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1 and not self.shot:
-                    self.shot = True
+                if event.button == 1 and not self.shoot:
+                    self.shoot = True
 
-        self.angle += pygame.mouse.get_rel()[0] / 400
-        self.rect.center = self.x, self.y
-        self.angle %= double_pi
+        self.player_view_angle += pygame.mouse.get_rel()[0] / 400
+        self.collision_rectangle.center = self.pos_x, self.pos_y
+        self.player_view_angle %= 2 * math.pi
 

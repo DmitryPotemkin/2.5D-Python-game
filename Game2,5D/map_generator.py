@@ -47,7 +47,7 @@ def map_gen(a, b):
     # Заполнение данных карты
 def mapCreate(lvl):
     if lvl == 1:
-        matrix_map = [
+        map_list = [
             [1,1,1,1,2,1,1,1,1,1,1,1],
             [1,_,_,_,_,_,_,_,2,_,_,1],
             [1,_,_,_,_,_,_,_,2,_,_,1],
@@ -58,7 +58,7 @@ def mapCreate(lvl):
             [1,1,1,1,1,1,1,2,1,1,1,1]
             ]
     elif lvl == 2:
-        matrix_map = [
+        map_list = [
             [1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1],
             [1,_,_,_,_,_,_,_,_,2,1,1,1,_,_,_,_,_,_,_,_,2,1,1],
             [1,1,_,_,_,_,_,_,_,1,1,1,1,_,_,_,_,_,_,_,_,2,1,1],
@@ -77,7 +77,7 @@ def mapCreate(lvl):
             [1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1]
             ]
     elif lvl == 3:
-        matrix_map = [
+        map_list = [
             [1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1],
             [1,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,1],
             [1,1,1,1,1,1,1,1,1,_,_,_,_,_,_,1,1,1,1,1,1,1,1,1],
@@ -96,22 +96,23 @@ def mapCreate(lvl):
             [1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1]
             ]
     else:
-        matrix_map = map_gen(24, 16)
-    world_width = len(matrix_map[0]) * tile
-    world_height = len(matrix_map) * tile
+        map_list = map_gen(24, 16)
+
+    map_width = len(map_list[0]) * tile
+    map_height = len(map_list) * tile
     world_map = Dict.empty(key_type=types.UniTuple(int32, 2), value_type=int32)
-    mini_map = set()
+    minimap = set()
     collision_walls = []
-    for j, row in enumerate(matrix_map):
+    for j, row in enumerate(map_list):
         for i, char in enumerate(row):
             if char:
-                mini_map.add((i * map_tile, j * map_tile))
+                minimap.add((i * map_tile, j * map_tile))
                 collision_walls.append(pygame.Rect(i * tile, j * tile, tile, tile))
                 if char == 1:
                     world_map[(i * tile, j * tile)] = 1
                 elif char == 2:
                     world_map[(i * tile, j * tile)] = 2
-    return matrix_map, world_width, world_height, world_map, mini_map, collision_walls
+    return map_list, map_width, map_height, world_map, minimap, collision_walls
 
 
-matrix_map, world_width, world_height, world_map, mini_map, collision_walls = mapCreate(1)
+map_list, map_width, map_height, world_map, minimap, collision_walls = mapCreate(1)

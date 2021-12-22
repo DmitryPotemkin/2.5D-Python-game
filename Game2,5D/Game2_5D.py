@@ -10,7 +10,7 @@ from interaction import Interaction
 # Инициализация pygame
 pygame.init()
 # Окно программы
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((screen_width, screen_height))
 # Мини карта
 screen_map = pygame.Surface(minimap_res)
 
@@ -34,17 +34,17 @@ while GameRunning:
 
     player.movement()
 
-    drawing.background(player.angle)
+    drawing.background(player.player_view_angle)
     walls, wall_shot = ray_casting_walls(player, drawing.textures)
     drawing.world(walls + [obj.object_locate(player)
                            for obj in sprites.list_of_objects])
-    drawing.mini_map(player)
-    drawing.player_weapon([wall_shot, sprites.sprite_shot])
+    drawing.minimap(player)
+    drawing.player_weapon([wall_shot, sprites.sprite_shoot])
 
     interaction.interaction_objects()
-    interaction.npc_action(player.x, player.y)
-    interaction.clear_world()
-    interaction.check_win()
+    interaction.enemy_action(player.pos_x, player.pos_y)
+    interaction.clear_objects()
+    interaction.win()
     interaction.check_status()
 
     # обновление содержимого окна на каждой итерации
